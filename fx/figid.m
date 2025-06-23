@@ -24,7 +24,9 @@
 %
 % v1.2 (2020-09-28):
 % Adding output: h for modifications
-% 
+%
+% v1.2.1 (2025-06-23):
+% Changing default text color from [.35 .35 .35] to [.15 .15 .15]
 
 function h = figid(str, varargin)
 
@@ -37,7 +39,7 @@ addParameter(p, 'Location',     'outleft')
 addParameter(p, 'FontSize',            10)
 addParameter(p, 'Background',      'none')
 addParameter(p, 'FontName',  'Monospaced')
-addParameter(p, 'Color',    [1 1 1] * .35)
+addParameter(p, 'Color',    [1 1 1] * .15)
 addParameter(p, 'FontWeight',    'normal')
 addParameter(p, 'EdgeColor',       'none')
 addParameter(p, 'Box',              false)
