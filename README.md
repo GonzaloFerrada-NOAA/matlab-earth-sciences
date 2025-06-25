@@ -1,5 +1,4 @@
 # MATLAB scripts and functions for Earth Sciences applications
-Author: **Gonzalo Ferrada** (*gonzalo.ferrada@noaa.gov*)
 
 Codes developed since 2017. First shared in Github: June 2025.
 
