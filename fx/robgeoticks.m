@@ -83,7 +83,9 @@ end
 set(t,'FontName',font_name,'FontSize',font_size)
 set(gca,'XColor','none','YColor','none','TickLength',[0 0])
 
-
+if nargout == 1
+    out = t;
+end
 
 
 

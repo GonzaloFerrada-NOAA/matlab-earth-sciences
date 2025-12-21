@@ -100,7 +100,7 @@ function [cbhandle, plothandle] = spatial(lon, lat, variable, varargin)
     if islambert
         % Determine automatic center lon and center lat in case they are not provided
         if numel(opts.Projection) == 1
-            opts.Projection = [mean(lat(:)) mean(lon(:))];
+            opts.Projection = [mean(lat(:),'omitnan') mean(lon(:),'omitnan')];
         end
     
         ax_auxi   = axes;
@@ -109,8 +109,8 @@ function [cbhandle, plothandle] = spatial(lon, lat, variable, varargin)
         lat_ticks = get(gca,'YTick'); if numel(lat_ticks) > 9; lat_ticks = lat_ticks(1:2:end); end
         lon_ticks = get(gca,'XTick'); if numel(lon_ticks) > 9; lon_ticks = lon_ticks(1:2:end); end
         delete(ax_auxi)
-        lon_orig = lon; 
-        lat_orig = lat;
+        
+        isglob = iisglobaldata(lon,lat);
         [lon,lat] = ll2lamb(opts.Projection,lon,lat);
         lon = real(lon);
         lat = real(lat);
@@ -258,14 +258,6 @@ function [cbhandle, plothandle] = spatial(lon, lat, variable, varargin)
     % Special settings for Lambert
     if islambert
       
-      % If it is global data being plotted in Lambert projection
-      % the plot axis go exponentially high and nothing is visible
-      % at first glance without the user sets the axis themselves.
-      % This is to avoid that:
-      dlon = max(lon(:)) - min(lon(:));
-      dlat = max(lat(:)) - min(lat(:));
-      isglob = dlon > 270 | dlat > 120;
-      
       if isglob 
         set(gca,'XLim',[-1 1] * 2700) 
         set(gca,'YLim',[-1 1] * 1800)
@@ -302,4 +294,14 @@ function [dataout, cbarticks, clabels] = data2levels(datain, levels)
   % Data values >= levels(end):
   dataout( datain >= levels(end)) = numel(levels);
   
+end
+
+function isglob = iisglobaldata(lon,lat)
+    % If it is global data being plotted in Lambert projection
+    % the plot axis go exponentially high and nothing is visible
+    % at first glance without the user sets the axis themselves.
+    % This is to avoid that:
+    dlon = max(lon(:)) - min(lon(:));
+    dlat = max(lat(:)) - min(lat(:));
+    isglob = dlon > 270 | dlat > 120;
 end
