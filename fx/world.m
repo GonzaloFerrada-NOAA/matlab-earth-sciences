@@ -221,9 +221,9 @@ elseif opts.isrob       % ROBINSON
     for i = 1:numel(ww)
         lonr = ww{i}(:,1);
         latr = ww{i}(:,2);
-        latr(lonr==180 | lonr==-180) = NaN;
-        lonr(lonr==180 | lonr==-180) = NaN;
-        [lonr,latr] = ll2rob(lonr,latr,opts.romlon);
+        % IX = (lonr == 180 | lonr == -180) & ((latr > 62 & latr < 74) | latr < -84);
+        % latr(IX) = NaN; lonr(IX) = NaN;
+        [lonr, latr] = ll2rob(lonr, latr, opts.romlon);
         plot(lonr,latr,'LineWidth',opts.lwidth,'Color',opts.color)
     end
     
@@ -245,13 +245,21 @@ elseif opts.isrob       % ROBINSON
     end
     
     grid off
-    % Plot world boundary shape:
-    lat = [-90:.1:90 90:-0.1:-90];
-    lon = [ones(1,numel(lat)/2)*-180 ones(1,numel(lat)/2)*180];
-    lon(end+1) = lon(1);lat(end+1) = lat(1);
-    [lon,lat] = ll2rob(lon,lat);
+    % Plot world boundary shape (Robinson frame):
+    % Build it explicitly with 4 edges (top, right, bottom, left) and NaN breaks.
+    n = 720;  % increase if you want a smoother frame
 
+    lon_top = linspace(-180, 180, n);   lat_top =  90 * ones(1,n);
+    lon_rgt =  180 * ones(1,n);         lat_rgt = linspace( 90,-90,n);
+    lon_bot = linspace( 180,-180, n);   lat_bot = -90 * ones(1,n);
+    lon_lft = -180 * ones(1,n);         lat_lft = linspace(-90, 90,n);
+
+    lon = [lon_top NaN lon_rgt NaN lon_bot NaN lon_lft];
+    lat = [lat_top NaN lat_rgt NaN lat_bot NaN lat_lft];
+
+    [lon,lat] = ll2rob(lon,lat,0);
     plot(lon,lat,'Color',opts.color,'LineWidth',opts.lwidth)
+
     % axis tight
     % set(gca,'XColor','none','YColor','none')
     % set(gca,'Box','off')

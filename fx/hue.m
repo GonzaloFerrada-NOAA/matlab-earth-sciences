@@ -20,7 +20,7 @@ function out = hue(varargin)
            'sat','oc','bc','rh','wind','ext','pm','pastel','temp','nox', ...
            'rainbow','frp','ncl','city','anom','anom2','anom3','anom4','pro','acc','gmao2', ...
            'finn','hum','aod','baod','emis','usgs','bright','daod','melt', ...
-           'grav','ceres','giss','ppa', 'ufsanom','hrrr'};
+           'grav','ceres','giss','ppa', 'ufsanom','hrrr', 'rainbow4', 'wr'};
   %
   % Check if user specified the number of colors in output colormap, 
   % if not assing a default value:
@@ -125,7 +125,15 @@ function out = hue(varargin)
   
     case 'rainbow'
       names = {'red', [255 119 58], [255 237 70], [0 248 57], [0 202 251], [18 51 249], [179 64 250]};
-  
+      
+    case 'rainbow4'
+        names = {[58 121 200], [103 188 176], [201 226 161], [252 250 190], [254 212 128], ...
+                 [253 140 80], [224 82 103], [177 54 121], [116 31 127], [68 18 110]};
+                 
+    case 'wr'
+        names = {[254 254 254],'lightblue',[103 188 176], [201 226 161], [252 250 190], [254 212 128], ...
+                 [253 140 80], [224 82 103], [177 54 121], [116 31 127], [68 18 110]};
+                 
     case 'frp'
       names = {'lightyellow','orange',[232 50 35],'indigo'};
   
