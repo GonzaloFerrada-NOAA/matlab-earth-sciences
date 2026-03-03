@@ -47,7 +47,7 @@ function out = metrics(observation, modeled)
   out.R     = sum((model - mean(model)) .* (obs - mean(obs))) / sqrt( sum((model - mean(model)) .^ 2 ) *  sum((obs - mean(obs)) .^ 2 ));
   out.R2    = out.R ^ 2;
   out.MB    = sum(model - obs) / out.N;
-  out.NMB   = sum(model - obs) / sum(obs);
+  out.NMB   = (sum(model - obs) / sum(obs)) * 100;
   out.MSE   = sum((model - obs) .^ 2) / out.N;
   out.RMSE  = sqrt( sum((model - obs) .^ 2) / out.N );
 
@@ -63,27 +63,68 @@ function out = metrics(observation, modeled)
   out.LinearX = linspace(mini, maxi, 500);
   out.LinearY = out.Slope .* out.LinearX + out.Intercept;
 
-  % Text labels:
-  str.N     = sprintf('%d',out.N);
-  str.R     = sprintf('%+0.2f',out.R);
-  str.MB    = sprintf('%+f',out.MB);
-  str.NMB   = sprintf('%+f',out.NMB);
-  str.RMSE  = sprintf('%f',out.RMSE);
+  % Text labels (metric-specific formatting):
+  str.N    = sprintf('%d', out.N);
+  str.R    = fmt_num(out.R,    3, false);
+  str.MB   = fmt_num(out.MB,   3, false);
+  str.NMB  = fmt_num(out.NMB,  3, true);   % includes %
+  str.RMSE = fmt_num(out.RMSE, 3, false);
 
-  L = 6;
-  if numel(str.N) > 6
-    L = numel(str.N);
+  % Vertical text: use padding for alignment.
+  W = max([numel(str.N), numel(str.R), numel(str.MB), numel(str.NMB), numel(str.RMSE)]);
+  line1    = ['   N = ' pad(str.N,    W, 'left')];
+  line2    = ['   R = ' pad(str.R,    W, 'left')];
+  line3    = ['  MB = ' pad(str.MB,   W, 'left')];
+  line4    = [' NMB = ' pad(str.NMB,  W, 'left')];
+  line5    = ['RMSE = ' pad(str.RMSE, W, 'left')];
+  out.Text = {line1; line2; line3; line4; line5};
+
+  % Horizontal text: no padding (compact).
+  out.TextH = ['N=' str.N ...
+               ' R=' str.R ...
+               ' MB=' str.MB ...
+               ' NMB=' str.NMB ...
+               ' RMSE=' str.RMSE];
+
+end
+
+function s = fmt_num(x, ndp, isPercent)
+%FMT_NUM Format numeric metrics with metric-specific precision.
+% - Uses fixed-point with ndp decimals by default.
+% - Switches to scientific notation when fixed-point would round to 0.
+% - Optionally appends '%' for percent metrics.
+
+  if nargin < 2 || isempty(ndp)
+    ndp = 3;
+  end
+  if nargin < 3
+    isPercent = false;
   end
 
-  % Horizontal text:
-  out.TextH = ['N=' str.N ' R= ' str.R ' MB=' str.MB(1:L) ' NMB=' str.NMB(1:L) ' RMSE=' str.RMSE(1:L)];
+  if isempty(x) || isnan(x)
+    s = 'NaN';
+  elseif isinf(x)
+    if x > 0
+      s = '+Inf';
+    else
+      s = '-Inf';
+    end
+  else
+    ax = abs(x);
 
-  % Vertical text:
-  line1     = ['   N = ' pad(        str.N, L, 'left')];
-  line2     = ['   R = ' pad(        str.R, L, 'left')];
-  line3     = ['  MB = ' pad(  str.MB(1:L), L, 'left')];
-  line4     = [' NMB = ' pad( str.NMB(1:L), L, 'left')];
-  line5     = ['RMSE = ' pad(str.RMSE(1:L), L, 'left')];
-  out.Text  = {line1; line2; line3; line4; line5};
+    % If fixed-point would print as 0.000... but value is nonzero, use scientific.
+    tiny = 10^(-ndp);
+    if ax > 0 && ax < tiny
+      s = sprintf(['%+.' num2str(2) 'e'], x);
+    else
+      s = sprintf(['%+.' num2str(ndp) 'f'], x);
+      % Trim trailing zeros and orphan decimal point.
+      s = regexprep(s, '0+$', '');
+      s = regexprep(s, '\.$', '');
+    end
+  end
 
+  if isPercent
+    s = [s(1:end-1) '%'];
+  end
 end
