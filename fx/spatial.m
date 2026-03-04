@@ -14,7 +14,7 @@
 % variable    : variable to plot (2-D).
 %
 % Optional Property Name arguments:
-% 'Colormap'  : colormap to be used to plot. 'gmao2' is default.
+% 'Colormap'  : colormap to be used to plot. 'gmao' is default.
 % 'Colorbar'  : 'on' (default) or 'off'. Displays colorbar.
 % 'Levels'    : variable levels/steps to plot. E.g.: [0:10:120].
 % 'MapRes'    : 'na1' (default). See 'help world' for a complete list of options.
@@ -48,7 +48,7 @@ function [cbhandle, plothandle] = spatial(lon, lat, variable, varargin)
     addOptional(p, 'Projection', 0); % 0: lat-lon, 1: Robinson, 2: Lambert, 3: Orthogonal
     
     addParameter(p,     'Type','surf')
-    addParameter(p, 'Colormap', hue('gmao2',64))
+    addParameter(p, 'Colormap', hue('jet3','log',64))
     addParameter(p, 'Colorbar', 'on')
     addParameter(p,   'Levels', [])
     addParameter(p,   'MapRes', 'na1')

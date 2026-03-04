@@ -36,7 +36,7 @@ function h = sglobe(varargin)
     addParameter(p,'MapRes','mc')
     addParameter(p,'MapColor',[1 1 1] * 0.25)
     addParameter(p,'Color',[1 1 1] * 0.92)
-    addParameter(p,'Colormap',custom_colormap('gmao2',64))
+    addParameter(p,'Colormap',custom_colormap('gmao',64))
     
     parse(p,varargin{:})
 

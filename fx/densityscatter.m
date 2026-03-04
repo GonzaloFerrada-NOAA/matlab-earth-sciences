@@ -10,7 +10,7 @@ function cb = densityscatter(X, dataX, dataY, varargin)
   
   addParameter(p, 'Levels',   [])
   addParameter(p, 'Colorbar', 'off')
-  addParameter(p, 'Colormap', hue('gmao2'))
+  addParameter(p, 'Colormap', hue('gmao'))
   
   p.KeepUnmatched = false;
 

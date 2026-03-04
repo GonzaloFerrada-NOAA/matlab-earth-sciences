@@ -9,34 +9,50 @@ function out = hue(varargin)
   % Initilize:
   iscolormap  = false;
   issingle    = false;
-  N_hues      = 256;      % Default number of colors in output if colormap
-  
-  % Check inputs:
-  lastarg     = cell2mat(varargin(nargin));
+  use_log     = false;
+  prepend_white = false;
+  N_hues      = 128;      % Default number of colors in output if colormap
   
   % Required variables to be able to analyze inputs:
   colortable = readtable('htmlcolors.csv');
-  cmaps = {'jet2','jet3','whitejet','gmao','cams','o3' ,'co','blh','clouds', ...
+  cmaps = {'jet2','jet3','gmao','cams','o3' ,'co','blh','clouds', ...
            'sat','oc','bc','rh','wind','ext','pm','pastel','temp','nox', ...
-           'rainbow','frp','ncl','city','anom','anom2','anom3','anom4','pro','acc','gmao2', ...
+           'rainbow','frp','ncl','city','anom','anom2','anom3','anom4','pro','acc', ...
            'finn','hum','aod','baod','emis','usgs','bright','daod','melt', ...
-           'grav','ceres','giss','ppa', 'ufsanom','hrrr', 'rainbow4', 'wr'};
-  %
-  % Check if user specified the number of colors in output colormap, 
-  % if not assing a default value:
-  if isnumeric(lastarg) & numel(lastarg) == 1
-    names  = varargin(1:end-1);
-    N_hues = lastarg;
-  else
-    names  = varargin;
+           'grav','ceres','giss','ppa', 'ufsanom','hrrr', 'rainbow4'};
+
+  names = varargin;
+  if nargin > 1
+    keep = true(1,nargin);
+    keep(1) = true;
+    for ia = 2:nargin
+      auxarg = varargin{ia};
+      if isnumeric(auxarg) && numel(auxarg) == 1
+        N_hues   = auxarg;
+        keep(ia) = false;
+      elseif islogtoken(auxarg)
+        use_log  = true;
+        keep(ia) = false;
+      end
+    end
+    names = varargin(keep);
   end
   
   % Check inputs:
-  if nargin == 1
+  if numel(names) == 1
     
     % This can be either a single html color -or- the user may be requesting
     % one of the multiple predefined colormaps:
-    if ismember(names, cmaps)
+    requested_name = char(names{1});
+    if length(requested_name) > 1 && lower(requested_name(1)) == 'w'
+      base_name = requested_name(2:end);
+      if any(strcmpi(base_name, cmaps))
+        prepend_white = true;
+        names{1} = base_name;
+      end
+    end
+
+    if any(strcmpi(names{1}, cmaps))
       % User wants a predefined colormap:
       iscolormap    = true;
     else
@@ -45,38 +61,31 @@ function out = hue(varargin)
       N_hues    = 1;
     end
     
-  elseif nargin > 1
+  elseif numel(names) > 1
     
     iscolormap = true;
-    
-    % Check if user wants an specific number of colors in colormap:
-    if isnumeric(lastarg) & numel(lastarg) == 1
-      
-      N_hues = lastarg;
-      
-    end
     
   end
   
   % Get names if predefined colormap:
-  if iscolormap & numel(names) == 1 & ismember(names{1}, cmaps)
+  if iscolormap && numel(names) == 1 && any(strcmpi(names{1}, cmaps))
 
-    switch names{1}
+    switch lower(char(names{1}))
     case 'jet2'
       names = {'royalblue','cyan','yellow','red'};
     
     case 'jet3'
-      names = {'dodgerblue','cyan','yellow','red'};
-    
-    case 'whitejet'
-      names = {[254 254 254],'royalblue','cyan','yellow','red'};
+      names = {[201 206 239], [114 140 244], [34 106 252], [10 186 238], [48 239 249], ... 
+               [43 201 150], [34 226 21], [153 252 3], [234 242 47], [255 181 7], ... 
+               [249 135 40], [249 76 18], [226 22 107], [247 109 214]};
     
     case 'gmao'
-      names = {[254 254 254],[242 236 252],[228 217 251],[200 193 250],[171 168 248],[118 161 222], ...
+      names = {[242 236 252],[228 217 251],[200 193 250],[171 168 248],[118 161 222], ...
                 [134 207 169],[226 241 101],[239 213 92],[241 145 91],[230 102 112],[200 70 159]};
-                    
+    
     case 'cams'
-      names = {[254 254 254],[134 144 189],[241 229 11],[248 115 6],'red'};
+      names = {[210 214 234], [167 174 214], [135 145 190], [162 167 144], [189 188 101], [215 209 56], ...
+                 [242 230 9], [243 197 5], [245 164 5], [247 131 4], [248 97 4], [250 65 1], [252 31 0]};
     
     case 'o3' 
       names = {[254 254 254],'skyblue',[145 204 113],'yellow','orange','salmon','mediumvioletred'};
@@ -130,10 +139,6 @@ function out = hue(varargin)
         names = {[58 121 200], [103 188 176], [201 226 161], [252 250 190], [254 212 128], ...
                  [253 140 80], [224 82 103], [177 54 121], [116 31 127], [68 18 110]};
                  
-    case 'wr'
-        names = {[254 254 254],'lightblue',[103 188 176], [201 226 161], [252 250 190], [254 212 128], ...
-                 [253 140 80], [224 82 103], [177 54 121], [116 31 127], [68 18 110]};
-                 
     case 'frp'
       names = {'lightyellow','orange',[232 50 35],'indigo'};
   
@@ -172,9 +177,7 @@ function out = hue(varargin)
       names = {[184 243 254],[149 231 253],[123 217 253],[ 43 196 252],[  6 162 226],[  0 109 224], ...
                 [111  73 194],[181  94 177],[224  62 220],[240 152 221]};
   
-    case 'gmao2'
-      names = {[242 236 252],[228 217 251],[200 193 250],[171 168 248],[118 161 222], ...
-                [134 207 169],[226 241 101],[239 213 92],[241 145 91],[230 102 112],[200 70 159]};
+    
   
     case 'finn'
       names = {[247 246 246],[238 237 238],[229 223 232],[211 208 224],[192 196 220],[183 200 218],[178 219 217], ...
@@ -229,6 +232,11 @@ function out = hue(varargin)
     end % switch names predefined
 
   end
+
+  % Allow requesting "w<predefined_colormap>" without redefining each map.
+  if prepend_white
+    names = [{[254 254 254]}, names];
+  end
   
   % Debug:
   % names
@@ -237,22 +245,22 @@ function out = hue(varargin)
       
   % names has all the color names and/or rgb colors needed at this point.
   % It is time to produce the output:
-  if issingle | numel(names) == 1
+  if issingle || numel(names) == 1
     
-    out = getcolor(names, colortable);
+    out = getcolor(names{1}, colortable);
     
     return
   end
   
   if iscolormap
     
-    Xi = linspace( 1, N_hues, numel(names));
+    Xi = linspace(0, 1, numel(names));
     
     for i = 1:numel(names)
       
       aux     = names{i};
       
-      if ischar(aux) 
+      if ischar(aux) || (isstring(aux) && isscalar(aux))
         
         outi(i,:) = getcolor(aux, colortable);
         
@@ -265,9 +273,15 @@ function out = hue(varargin)
     end % i
     
     % Interpolate to desired number of colors:
+    if use_log && N_hues > 1
+      Xq = (logspace(0,1,N_hues)-1) ./ 9;
+    else
+      Xq = linspace(0,1,N_hues);
+    end
+
     for j = 1:3
       
-      out(:,j) = interp1( Xi, outi(:,j), 1:N_hues);
+      out(:,j) = interp1(Xi, outi(:,j), Xq, 'linear');
       
     end % j
     
@@ -320,4 +334,16 @@ function out = getcolor(colorname, data)
     
   out = out ./ 255;
   
+end
+
+
+
+function out = islogtoken(argin)
+  if ischar(argin)
+    out = strcmpi(argin,'log');
+  elseif isstring(argin) && isscalar(argin)
+    out = strcmpi(char(argin),'log');
+  else
+    out = false;
+  end
 end
