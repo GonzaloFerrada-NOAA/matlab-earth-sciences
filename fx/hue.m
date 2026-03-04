@@ -88,10 +88,10 @@ function out = hue(varargin)
                  [242 230 9], [243 197 5], [245 164 5], [247 131 4], [248 97 4], [250 65 1], [252 31 0]};
     
     case 'o3' 
-      names = {[254 254 254],'skyblue',[145 204 113],'yellow','orange','salmon','mediumvioletred'};
+      names = {'skyblue',[145 204 113],'yellow','orange','salmon','mediumvioletred'};
     
     case 'co'
-      names = {[254 254 254],'Wheat',[255 255 112],'orange','crimson','PaleVioletRed','MediumPurple','DarkTurquoise'};
+      names = {'Wheat',[255 255 112],'orange','crimson','PaleVioletRed','MediumPurple','DarkTurquoise'};
   
     case 'blh'
       names = {'lightblue','lightyellow','sandybrown','chocolate'};
@@ -100,19 +100,19 @@ function out = hue(varargin)
       names = {'black','gray','whitesmoke','royalblue','limegreen','yellow','darkorange','firebrick','pink','lavender'};
  
     case 'sat'
-      names = {[254 254 254],'lightblue','DarkTurquoise','royalblue','salmon','pink'};
+      names = {'lightblue','DarkTurquoise','royalblue','salmon','pink'};
   
     case 'oc'
-      names = {[254 254 254],[145 204 113],'yellow','orangered','darkred'};
+      names = {[145 204 113],'yellow','orangered','darkred'};
   
     case 'bc'
-      names = {[254 254 254],[145 204 113],'yellow','orange','MediumVioletRed',[152 102 203]};
+      names = {[145 204 113],'yellow','orange','MediumVioletRed',[152 102 203]};
   
     case 'rh'
       names = {'tan','wheat',[254 254 254],'lightskyblue','royalblue'};
   
     case 'wind'
-      names = {[254 254 254],'lightskyblue',[145 204 113],'yellow','tomato','pink'};
+      names = {'lightskyblue',[145 204 113],'yellow','tomato','pink'};
     
     case 'ext'
       names = {'black',[0 2 46],[10 38 75],[23 64 96],[37 93 119],[47 113 135],[57 132 151],[65 149 166],[79 177 187], ...
@@ -120,17 +120,17 @@ function out = hue(varargin)
                 [215 98 42],[205 61 32],[218 112 146],[255 181 192]};
   
     case 'pm'
-      names = {[254 254 254],'wheat','yellow','tomato','crimson','darkred'};
+      names = {'wheat','yellow','tomato','crimson','darkred'};
   
     case 'pastel'
-      names = {[254 254 254],[221 209 231],'skyBlue','yellow','tomato','pink'};
+      names = {[221 209 231],'skyBlue','yellow','tomato','pink'};
   
     case 'temp'
       names = {[215 190 215],[184 196 229],[151 202 243],[128 194 247],[114 172 242],[100 148 236],[145 204 113],[180 220 77], ...
                 [216 237 40],[253 254 2],[255 196 0],[255 131 0],[255 69 0],[255 109 67],[255 150 134],[255 191 202]};
   
     case 'nox'
-      names = {[254 254 254],[178 203 225],[157 176 178],[217 186 109],[230 176 92],[224 158 83],[199 117 59],[146 73 34],[78 31 9]};
+      names = {[178 203 225],[157 176 178],[217 186 109],[230 176 92],[224 158 83],[199 117 59],[146 73 34],[78 31 9]};
   
     case 'rainbow'
       names = {'red', [255 119 58], [255 237 70], [0 248 57], [0 202 251], [18 51 249], [179 64 250]};
@@ -143,11 +143,11 @@ function out = hue(varargin)
       names = {'lightyellow','orange',[232 50 35],'indigo'};
   
     case 'ncl'
-      names = {[254 254 254],[179 227 247],[108 180 222],[ 58 136 177],[ 60 163  93],[153 199  84], ...
+      names = {[179 227 247],[108 180 222],[ 58 136 177],[ 60 163  93],[153 199  84], ...
                 [250 200  87],[248 110  54],[226  54  44],[187  25  38],[137  20  28]};
   
     case 'hrrr'
-      names = {[254 254 254], [208 225 242], [148 196 223], [74 152 201], [22 100 171], [16 132 70], ...
+      names = { [208 225 242], [148 196 223], [74 152 201], [22 100 171], [16 132 70], ...
                [84 180 94], [162 215 106], [255 246 176], [252 170 95], [247 132 78], [237 95 60], ...
                [194 27 39], [165 0 37], [153 0 250]};
     
@@ -184,10 +184,10 @@ function out = hue(varargin)
                 [167 216 180],[158 218 128],[183 221 115],[230 232 109],[223 163  76],[216 80 47]};
   
     case 'hum'
-      names = {[254 254 254],'blanchedalmond','wheat',[241 229 11],[145 204 113],'royalblue','plum'};
+      names = {'blanchedalmond','wheat',[241 229 11],[145 204 113],'royalblue','plum'};
   
     case 'aod'
-      names = {[254 254 254],[243 249 251],[153 210 239],[241 229 11],[239 194 16],[238 158 20],[236 122 25],[234 86 30],[232 50 35]};
+      names = {[243 249 251],[153 210 239],[241 229 11],[239 194 16],[238 158 20],[236 122 25],[234 86 30],[232 50 35]};
   
     case 'baod'
       names = {[1 1 1],'skyblue','gold',[232 50 35],'darkred'};
