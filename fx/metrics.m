@@ -69,6 +69,7 @@ function out = metrics(observation, modeled)
   str.MB   = fmt_num(out.MB,   3, false);
   str.NMB  = fmt_num(out.NMB,  3, true);   % includes %
   str.RMSE = fmt_num(out.RMSE, 3, false);
+  str.RMSE = str.RMSE(2:end); % Removing + since RMSE > 0
 
   % Vertical text: use padding for alignment.
   W = max([numel(str.N), numel(str.R), numel(str.MB), numel(str.NMB), numel(str.RMSE)]);

@@ -44,8 +44,8 @@ function metrics = taylormetrics(obs, model)
     ma = m - mu_m;
 
     % Population standard deviations
-    sig_o = sqrt(mean(oa.^2));
-    sig_m = sqrt(mean(ma.^2));
+    sig_o = std(o);
+    sig_m = std(m);
 
     if sig_o == 0 || sig_m == 0
         % Degenerate case: one series has no variability
@@ -63,11 +63,11 @@ function metrics = taylormetrics(obs, model)
 
     % Centered RMSE and normalized versions
     cRMSE  = sqrt(mean((ma - oa).^2));
-    nRMSE  = cRMSE / sig_o;
     nsigma = sig_m / sig_o;
 
     % Pack results
     metrics.r     = r;
-    metrics.nrmse = nRMSE;
-    metrics.sigma = nsigma;
+    metrics.cRMSE = cRMSE;
+    metrics.nSTD  = nsigma;
+    
 end
