@@ -1,16 +1,17 @@
 function m = earthmean(data, gridarea, nanflag)
-%EARTHMEAN gridarea-weighted global mean of a 2-D gridded variable
+%EARTHMEAN Area-weighted global mean of a 2-D gridded variable
 %
 %   m = earthmean(data, gridarea)
 %   m = earthmean(data, gridarea, 'omitnan')
+%   m = earthmean(data, gridarea, 'includenan')
 %
-%   Inputs:
-%     data      - 2-D array of the variable
-%     gridarea  - 2-D array of grid-cell areas (same size as data)
-%     nanflag   -  optional, 'omitnan' to ignore NaNs (default: include NaNs)
+% Inputs:
+%   data     - 2-D array
+%   gridarea - 2-D array of grid-cell areas (same size as data)
+%   nanflag  - optional: 'omitnan' or 'includenan' (default: 'includenan')
 %
-%   Output:
-%     m       - gridarea-weighted global mean
+% Output:
+%   m - area-weighted mean
 
     narginchk(2,3)
 
@@ -18,7 +19,11 @@ function m = earthmean(data, gridarea, nanflag)
         error('data and gridarea must have the same size.');
     end
 
-    if nargin < 3
+    if any(gridarea(:) < 0, 'all')
+        error('gridarea must be nonnegative.');
+    end
+
+    if nargin < 3 || isempty(nanflag)
         nanflag = 'includenan';
     end
 
@@ -26,13 +31,21 @@ function m = earthmean(data, gridarea, nanflag)
         case 'omitnan'
             mask = ~isnan(data) & ~isnan(gridarea);
             wsum = sum(gridarea(mask));
-            m    = sum(data(mask) .* gridarea(mask)) / wsum;
+            if wsum == 0
+                m = NaN;
+                return
+            end
+            m = sum(data(mask) .* gridarea(mask)) / wsum;
 
         case 'includenan'
             wsum = sum(gridarea(:));
-            m    = sum(data(:) .* gridarea(:)) / wsum;
+            if wsum == 0
+                m = NaN;
+                return
+            end
+            m = sum(data(:) .* gridarea(:)) / wsum;
 
         otherwise
-            error("nanflag must be 'omitnan'.");
+            error("nanflag must be 'omitnan' or 'includenan'.");
     end
 end

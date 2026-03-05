@@ -1,8 +1,13 @@
-function out = metrics(observation, modeled)
+function out = metrics(observation, modeled, garea)
   % metrics calculates a bunch of commonly used metrics used to evaluate
   % the performance of a model against observation data.
   % Usage:
   % data = metrics(observation_data, modeled_data);
+  % data = metrics(observation_data, modeled_data, garea);
+  %
+  % Optional input:
+  % garea     : Weights for each point (same size as inputs). Metrics are
+  %             calculated as weighted averages using garea.
   %
   % output 'data' is a struct that contains the fields:
   % N         : Number of points that are not NaN
@@ -29,31 +34,67 @@ function out = metrics(observation, modeled)
   % Read input data:
   obs     = observation(:);
   model   = modeled(:);
+  useWeights = (nargin >= 3) && ~isempty(garea);
 
   % Check for errors:
   if numel(obs) ~= numel(model)
       error('Inputs should have the same number of elements')
   end
+  if useWeights
+      gareaVec = garea(:);
+      if numel(gareaVec) ~= numel(obs)
+          error('Inputs should have the same number of elements')
+      end
+      if ~isnumeric(gareaVec)
+          error('garea must be numeric')
+      end
+      if any(gareaVec < 0)
+          error('garea must be nonnegative')
+      end
+      invalidGarea = (isfinite(obs) | isfinite(model)) & isnan(gareaVec);
+      if any(invalidGarea)
+          error('garea contains NaNs where observation or modeled values are finite')
+      end
+  else
+      gareaVec = [];
+  end
 
   % Remove NaNs:
-  I         = isnan(model) | isnan(obs);
-  obs(I)    = [];
-  model(I)  = [];
+  nanMask    = isnan(model) | isnan(obs);
+  obs(nanMask)    = [];
+  model(nanMask)  = [];
+  if useWeights
+      gareaVec(nanMask) = [];
+      if any(isnan(gareaVec))
+          error('garea contains NaNs where observation or modeled values are finite')
+      end
+      weightSum = sum(gareaVec);
+      if weightSum == 0
+          error('garea weights sum to zero')
+      end
+      weights = gareaVec ./ weightSum;
+  else
+      weights = ones(size(obs)) ./ max(numel(obs), 1);
+  end
 
   % Calculate metrics:
   out.N     = numel(obs);
   % out.R     = corrcoef(obs, model);
   % out.R     = out.R(2,1);
-  out.R     = sum((model - mean(model)) .* (obs - mean(obs))) / sqrt( sum((model - mean(model)) .^ 2 ) *  sum((obs - mean(obs)) .^ 2 ));
+  meanModel = sum(weights .* model);
+  meanObs   = sum(weights .* obs);
+  out.R     = sum(weights .* (model - meanModel) .* (obs - meanObs)) / ...
+              sqrt( sum(weights .* (model - meanModel) .^ 2 ) *  sum(weights .* (obs - meanObs) .^ 2 ));
   out.R2    = out.R ^ 2;
-  out.MB    = sum(model - obs) / out.N;
-  out.NMB   = (sum(model - obs) / sum(obs)) * 100;
-  out.MSE   = sum((model - obs) .^ 2) / out.N;
-  out.RMSE  = sqrt( sum((model - obs) .^ 2) / out.N );
+  out.MB    = sum(weights .* (model - obs));
+  out.NMB   = (sum(weights .* (model - obs)) / sum(weights .* obs)) * 100;
+  out.MSE   = sum(weights .* (model - obs) .^ 2);
+  out.RMSE  = sqrt(out.MSE);
+  out.Weights = weights;
 
   % Calculate linear regression coefficients:
-  out.Slope     = (out.N * sum(obs .* model) - sum(obs) * sum(model)) / (out.N * sum(obs .^ 2) - (sum(obs)) ^ 2);
-  out.Intercept = (sum(model) - out.Slope * sum(obs)) / out.N;
+  out.Slope     = sum(weights .* (obs - meanObs) .* (model - meanModel)) / sum(weights .* (obs - meanObs) .^ 2);
+  out.Intercept = meanModel - out.Slope * meanObs;
   % using polyfit gives the same values.
 
   % Give some data sample to be ready to plot:
