@@ -10,7 +10,6 @@ function out = hue(varargin)
   iscolormap  = false;
   issingle    = false;
   use_log     = false;
-  prepend_white = false;
   N_hues      = 128;      % Default number of colors in output if colormap
   
   % Required variables to be able to analyze inputs:
@@ -38,204 +37,27 @@ function out = hue(varargin)
     names = varargin(keep);
   end
   
-  % Check inputs:
-  if numel(names) == 1
-    
-    % This can be either a single html color -or- the user may be requesting
-    % one of the multiple predefined colormaps:
-    requested_name = char(names{1});
-    if length(requested_name) > 1 && lower(requested_name(1)) == 'w'
-      base_name = requested_name(2:end);
-      if any(strcmpi(base_name, cmaps))
-        prepend_white = true;
-        names{1} = base_name;
-      end
-    end
-
-    if any(strcmpi(names{1}, cmaps))
-      % User wants a predefined colormap:
-      iscolormap    = true;
+  % Expand any predefined colormap name in-place. Non-colormap inputs are
+  % kept as individual colors, so users can prepend or append freely.
+  expanded_names = {};
+  found_cmap = false;
+  for ia = 1:numel(names)
+    auxname = names{ia};
+    if ispredefinedcmap(auxname, cmaps)
+      expanded_names = [expanded_names, getpredefinedcmap(auxname)]; %#ok<AGROW>
+      found_cmap = true;
     else
-      % This is a request for a single color input and output:
-      issingle  = true;
-      N_hues    = 1;
+      expanded_names{end+1} = auxname; %#ok<AGROW>
     end
-    
-  elseif numel(names) > 1
-    
+  end
+  names = expanded_names;
+
+  % Check inputs after expanding predefined colormaps:
+  if numel(names) == 1 && ~found_cmap
+    issingle = true;
+    N_hues   = 1;
+  elseif numel(names) > 1 || found_cmap
     iscolormap = true;
-    
-  end
-  
-  % Get names if predefined colormap:
-  if iscolormap && numel(names) == 1 && any(strcmpi(names{1}, cmaps))
-
-    switch lower(char(names{1}))
-    case 'jet2'
-      names = {'royalblue','cyan','yellow','red'};
-    
-    case 'jet3'
-      names = {[201 206 239], [114 140 244], [34 106 252], [10 186 238], [48 239 249], ... 
-               [43 201 150], [34 226 21], [153 252 3], [234 242 47], [255 181 7], ... 
-               [249 135 40], [249 76 18], [226 22 107], [247 109 214]};
-    
-    case 'gmao'
-      names = {[242 236 252],[228 217 251],[200 193 250],[171 168 248],[118 161 222], ...
-                [134 207 169],[226 241 101],[239 213 92],[241 145 91],[230 102 112],[200 70 159]};
-    
-    case 'cams'
-      names = {[210 214 234], [167 174 214], [135 145 190], [162 167 144], [189 188 101], [215 209 56], ...
-                 [242 230 9], [243 197 5], [245 164 5], [247 131 4], [248 97 4], [250 65 1], [252 31 0]};
-    
-    case 'o3' 
-      names = {'skyblue',[145 204 113],'yellow','orange','salmon','mediumvioletred'};
-    
-    case 'co'
-      names = {'Wheat',[255 255 112],'orange','crimson','PaleVioletRed','MediumPurple','DarkTurquoise'};
-  
-    case 'blh'
-      names = {'lightblue','lightyellow','sandybrown','chocolate'};
-  
-    case 'clouds'
-      names = {'black','gray','whitesmoke','royalblue','limegreen','yellow','darkorange','firebrick','pink','lavender'};
- 
-    case 'sat'
-      names = {'lightblue','DarkTurquoise','royalblue','salmon','pink'};
-  
-    case 'oc'
-      names = {[145 204 113],'yellow','orangered','darkred'};
-  
-    case 'bc'
-      names = {[145 204 113],'yellow','orange','MediumVioletRed',[152 102 203]};
-  
-    case 'rh'
-      names = {'tan','wheat',[254 254 254],'lightskyblue','royalblue'};
-  
-    case 'wind'
-      names = {'lightskyblue',[145 204 113],'yellow','tomato','pink'};
-    
-    case 'ext'
-      names = {'black',[0 2 46],[10 38 75],[23 64 96],[37 93 119],[47 113 135],[57 132 151],[65 149 166],[79 177 187], ...
-                [92 203 207],[101 223 223],[111 238 146],[171 246 77],[254 245 82],[244 208 72],[234 171 62],[225 135 52], ...
-                [215 98 42],[205 61 32],[218 112 146],[255 181 192]};
-  
-    case 'pm'
-      names = {'wheat','yellow','tomato','crimson','darkred'};
-  
-    case 'pastel'
-      names = {[221 209 231],'skyBlue','yellow','tomato','pink'};
-  
-    case 'temp'
-      names = {[215 190 215],[184 196 229],[151 202 243],[128 194 247],[114 172 242],[100 148 236],[145 204 113],[180 220 77], ...
-                [216 237 40],[253 254 2],[255 196 0],[255 131 0],[255 69 0],[255 109 67],[255 150 134],[255 191 202]};
-  
-    case 'nox'
-      names = {[178 203 225],[157 176 178],[217 186 109],[230 176 92],[224 158 83],[199 117 59],[146 73 34],[78 31 9]};
-  
-    case 'rainbow'
-      names = {'red', [255 119 58], [255 237 70], [0 248 57], [0 202 251], [18 51 249], [179 64 250]};
-      
-    case 'rainbow4'
-        names = {[58 121 200], [103 188 176], [201 226 161], [252 250 190], [254 212 128], ...
-                 [253 140 80], [224 82 103], [177 54 121], [116 31 127], [68 18 110]};
-                 
-    case 'frp'
-      names = {'lightyellow','orange',[232 50 35],'indigo'};
-  
-    case 'ncl'
-      names = {[179 227 247],[108 180 222],[ 58 136 177],[ 60 163  93],[153 199  84], ...
-                [250 200  87],[248 110  54],[226  54  44],[187  25  38],[137  20  28]};
-  
-    case 'hrrr'
-      names = { [208 225 242], [148 196 223], [74 152 201], [22 100 171], [16 132 70], ...
-               [84 180 94], [162 215 106], [255 246 176], [252 170 95], [247 132 78], [237 95 60], ...
-               [194 27 39], [165 0 37], [153 0 250]};
-    
-    case 'city'
-      names = {[  2  32  44],[ 74  55 143],[167  85  118],[252 133  69],[232 244  97]};
-    
-    case 'anom4'
-      names = {[91 81 157],[124 191 166],[223 244 163],[252 252 252],[250 224 150],[229 117 79],[146 29 67]};
-  
-    case 'anom3'
-      names = {[91 81 157],[114 141 166],[186 200 227],[252 252 252],[250 214 150],[229 107 79],[146 29 67]};
-      
-    case 'anom'
-      names = {[36 126 177],[146 190 216],[254 254 254],[251 136 83],[212 55 72]};
-      
-    case 'anom2'
-      names = {[38 66 155],[88 197 219],[254 254 254],[255 148 99],[229 35 51]};
-      
-    case 'ufsanom'
-      names = {[7 30 70], [7 46 108], [9 87 156], [33 113 181], [66 146 199], [90 160 205], [120 191 214], [170 220 230], [219 245 255], ...
-              [255 255 255], [255 224 224], [252 187 169], [252 146 114], [251 106 74], [240 59 43], [204 23 30], [166 15 20], [120 10 16], [95 0 0]};
-  
-    case 'pro'
-      names = {'black','midnightblue','CadetBlue','LemonChiffon','orange','red','darkred'};
-  
-    case 'acc'
-      names = {[184 243 254],[149 231 253],[123 217 253],[ 43 196 252],[  6 162 226],[  0 109 224], ...
-                [111  73 194],[181  94 177],[224  62 220],[240 152 221]};
-  
-    
-  
-    case 'finn'
-      names = {[247 246 246],[238 237 238],[229 223 232],[211 208 224],[192 196 220],[183 200 218],[178 219 217], ...
-                [167 216 180],[158 218 128],[183 221 115],[230 232 109],[223 163  76],[216 80 47]};
-  
-    case 'hum'
-      names = {'blanchedalmond','wheat',[241 229 11],[145 204 113],'royalblue','plum'};
-  
-    case 'aod'
-      names = {[243 249 251],[153 210 239],[241 229 11],[239 194 16],[238 158 20],[236 122 25],[234 86 30],[232 50 35]};
-  
-    case 'baod'
-      names = {[1 1 1],'skyblue','gold',[232 50 35],'darkred'};
-  
-    case 'emis'
-      names = {[25 62 139],'skyblue',[145 204 113],'gold',[232 50 35]};
-    
-    case 'usgs'
-      names = {[225,230,240],[199,204,225],[193,204,251],[183,216,251],[174,227,252],[165,240,253],[159,252,254],[156,252,203], ...
-                [156,251,155],[201,252,106],[254,254,85],[251,226,76],[247,199,68],[244,173,61],[238 104 44] };
-
-    % From Panoply: 
-    case 'bright'
-      names = {[241 248 250],[187 222 238],[150 191 220],[123 162 208],[ 97 131 195],[128  92 155], ...
-                [184 111 143],[231 135 136],[254 170 138],[255 205 138],[255 238 199]};
-  
-    case 'daod'
-      names = {[ 94  54 138],[127 112 166],[165 158 197],[198 197 220],[230 231 241],[250 250 250], ...
-                [255 230 201],[255 202 147],[254 171  95],[231 129  50],[197  97  38]};
-  
-    case 'melt'
-      names = {[  0  60 109],[  5  95 129],[ 64 128 154],[100 163 175],[137 196 199],[247 245 242], ...
-                [255 200 154],[255 178 123],[255 156  91],[255 135  64],[255 114  47]};
-  
-    case 'grav'
-      names = {[ 38  66 155],[  0 126 181],[ 48 178 207],[128 217 230],[205 241 246],[254 252 206], ...
-                [255 229 164],[255 180 117],[255 116  81],[255  40  49],[229  35  51]};
-  
-    case 'ceres'
-      names = {[ 36 126 177],[ 77 174 160],[131 204 157],[188 226 154],[233 244 158],[255 253 187], ...
-                [255 225 146],[255 184 110],[251 136  83],[238  87  67],[212  55  72]};
-  
-    case 'giss'
-      names = {[152   0  16],[197  21  24],[242  48  35],[242  76  44],[241 109  55],[241 145  67], ...
-                [240 184  80],[239 231  95],[182 236  87],[111 228  80],[ 62 159 116],[  0  88 248], ...
-                [ 47 120 248],[ 77 157 250],[111 194 251],[135 222 252]};
-                              
-    case 'ppa'
-      names = {[184 119  60],[212 142  79],[234 196 142],[249 233 206],[254 254 254],[156 226 218], ...
-                [ 59 186 175],[  0 148 140],[  0 134 125]};
-    
-    end % switch names predefined
-
-  end
-
-  % Allow requesting "w<predefined_colormap>" without redefining each map.
-  if prepend_white
-    names = [{[254 254 254]}, names];
   end
   
   % Debug:
@@ -345,5 +167,181 @@ function out = islogtoken(argin)
     out = strcmpi(char(argin),'log');
   else
     out = false;
+  end
+end
+
+
+
+function out = ispredefinedcmap(argin, cmaps)
+  if ischar(argin)
+    out = any(strcmpi(argin, cmaps));
+  elseif isstring(argin) && isscalar(argin)
+    out = any(strcmpi(char(argin), cmaps));
+  else
+    out = false;
+  end
+end
+
+
+
+function names = getpredefinedcmap(cmapname)
+  switch lower(char(cmapname))
+  case 'jet2'
+    names = {'royalblue','cyan','yellow','red'};
+
+  case 'jet3'
+    names = {[201 206 239], [114 140 244], [34 106 252], [10 186 238], [48 239 249], ...
+             [43 201 150], [34 226 21], [153 252 3], [234 242 47], [255 181 7], ...
+             [249 135 40], [249 76 18], [226 22 107], [247 109 214]};
+
+  case 'gmao'
+    names = {[242 236 252],[228 217 251],[200 193 250],[171 168 248],[118 161 222], ...
+              [134 207 169],[226 241 101],[239 213 92],[241 145 91],[230 102 112],[200 70 159]};
+
+  case 'cams'
+    names = {[210 214 234], [167 174 214], [135 145 190], [162 167 144], [189 188 101], [215 209 56], ...
+               [242 230 9], [243 197 5], [245 164 5], [247 131 4], [248 97 4], [250 65 1], [252 31 0]};
+
+  case 'o3'
+    names = {'skyblue',[145 204 113],'yellow','orange','salmon','mediumvioletred'};
+
+  case 'co'
+    names = {'Wheat',[255 255 112],'orange','crimson','PaleVioletRed','MediumPurple','DarkTurquoise'};
+
+  case 'blh'
+    names = {'lightblue','lightyellow','sandybrown','chocolate'};
+
+  case 'clouds'
+    names = {'black','gray','whitesmoke','royalblue','limegreen','yellow','darkorange','firebrick','pink','lavender'};
+
+  case 'sat'
+    names = {'lightblue','DarkTurquoise','royalblue','salmon','pink'};
+
+  case 'oc'
+    names = {[145 204 113],'yellow','orangered','darkred'};
+
+  case 'bc'
+    names = {[145 204 113],'yellow','orange','MediumVioletRed',[152 102 203]};
+
+  case 'rh'
+    names = {'tan','wheat',[254 254 254],'lightskyblue','royalblue'};
+
+  case 'wind'
+    names = {'lightskyblue',[145 204 113],'yellow','tomato','pink'};
+
+  case 'ext'
+    names = {[0 2 46],[10 38 75],[23 64 96],[37 93 119],[47 113 135],[57 132 151],[65 149 166],[79 177 187], ...
+              [92 203 207],[101 223 223],[111 238 146],[171 246 77],[254 245 82],[244 208 72],[234 171 62],[225 135 52], ...
+              [215 98 42],[205 61 32],[218 112 146],[255 181 192]};
+
+  case 'pm'
+    names = {'wheat','yellow','tomato','crimson','darkred'};
+
+  case 'pastel'
+    names = {[221 209 231],'skyBlue','yellow','tomato','pink'};
+
+  case 'temp'
+    names = {[215 190 215],[184 196 229],[151 202 243],[128 194 247],[114 172 242],[100 148 236],[145 204 113],[180 220 77], ...
+              [216 237 40],[253 254 2],[255 196 0],[255 131 0],[255 69 0],[255 109 67],[255 150 134],[255 191 202]};
+
+  case 'nox'
+    names = {[178 203 225],[157 176 178],[217 186 109],[230 176 92],[224 158 83],[199 117 59],[146 73 34],[78 31 9]};
+
+  case 'rainbow'
+    names = {'red', [255 119 58], [255 237 70], [0 248 57], [0 202 251], [18 51 249], [179 64 250]};
+
+  case 'rainbow4'
+    names = {[58 121 200], [103 188 176], [201 226 161], [252 250 190], [254 212 128], ...
+             [253 140 80], [224 82 103], [177 54 121], [116 31 127], [68 18 110]};
+
+  case 'frp'
+    names = {'lightyellow','orange',[232 50 35],'indigo'};
+
+  case 'ncl'
+    names = {[179 227 247],[108 180 222],[ 58 136 177],[ 60 163  93],[153 199  84], ...
+              [250 200  87],[248 110  54],[226  54  44],[187  25  38],[137  20  28]};
+
+  case 'hrrr'
+    names = {[208 225 242], [148 196 223], [74 152 201], [22 100 171], [16 132 70], ...
+             [84 180 94], [162 215 106], [255 246 176], [252 170 95], [247 132 78], [237 95 60], ...
+             [194 27 39], [165 0 37], [153 0 250]};
+
+  case 'city'
+    names = {[  2  32  44],[ 74  55 143],[167  85  118],[252 133  69],[232 244  97]};
+
+  case 'anom4'
+    names = {[91 81 157],[124 191 166],[223 244 163],[252 252 252],[250 224 150],[229 117 79],[146 29 67]};
+
+  case 'anom3'
+    names = {[91 81 157],[114 141 166],[186 200 227],[252 252 252],[250 214 150],[229 107 79],[146 29 67]};
+
+  case 'anom'
+    names = {[36 126 177],[146 190 216],[254 254 254],[251 136 83],[212 55 72]};
+
+  case 'anom2'
+    names = {[38 66 155],[88 197 219],[254 254 254],[255 148 99],[229 35 51]};
+
+  case 'ufsanom'
+    names = {[7 30 70], [7 46 108], [9 87 156], [33 113 181], [66 146 199], [90 160 205], [120 191 214], [170 220 230], [219 245 255], ...
+            [255 255 255], [255 224 224], [252 187 169], [252 146 114], [251 106 74], [240 59 43], [204 23 30], [166 15 20], [120 10 16], [95 0 0]};
+
+  case 'pro'
+    names = {'black','midnightblue','CadetBlue','LemonChiffon','orange','red','darkred'};
+
+  case 'acc'
+    names = {[184 243 254],[149 231 253],[123 217 253],[ 43 196 252],[  6 162 226],[  0 109 224], ...
+              [111  73 194],[181  94 177],[224  62 220],[240 152 221]};
+
+  case 'finn'
+    names = {[247 246 246],[238 237 238],[229 223 232],[211 208 224],[192 196 220],[183 200 218],[178 219 217], ...
+              [167 216 180],[158 218 128],[183 221 115],[230 232 109],[223 163  76],[216 80 47]};
+
+  case 'hum'
+    names = {'blanchedalmond','wheat',[241 229 11],[145 204 113],'royalblue','plum'};
+
+  case 'aod'
+    names = {[243 249 251],[153 210 239],[241 229 11],[239 194 16],[238 158 20],[236 122 25],[234 86 30],[232 50 35]};
+
+  case 'baod'
+    names = {[1 1 1],'skyblue','gold',[232 50 35],'darkred'};
+
+  case 'emis'
+    names = {[25 62 139],'skyblue',[145 204 113],'gold',[232 50 35]};
+
+  case 'usgs'
+    names = {[225,230,240],[199,204,225],[193,204,251],[183,216,251],[174,227,252],[165,240,253],[159,252,254],[156,252,203], ...
+              [156,251,155],[201,252,106],[254,254,85],[251,226,76],[247,199,68],[244,173,61],[238 104 44]};
+
+  case 'bright'
+    names = {[241 248 250],[187 222 238],[150 191 220],[123 162 208],[ 97 131 195],[128  92 155], ...
+              [184 111 143],[231 135 136],[254 170 138],[255 205 138],[255 238 199]};
+
+  case 'daod'
+    names = {[ 94  54 138],[127 112 166],[165 158 197],[198 197 220],[230 231 241],[250 250 250], ...
+              [255 230 201],[255 202 147],[254 171  95],[231 129  50],[197  97  38]};
+
+  case 'melt'
+    names = {[  0  60 109],[  5  95 129],[ 64 128 154],[100 163 175],[137 196 199],[247 245 242], ...
+              [255 200 154],[255 178 123],[255 156  91],[255 135  64],[255 114  47]};
+
+  case 'grav'
+    names = {[ 38  66 155],[  0 126 181],[ 48 178 207],[128 217 230],[205 241 246],[254 252 206], ...
+              [255 229 164],[255 180 117],[255 116  81],[255  40  49],[229  35  51]};
+
+  case 'ceres'
+    names = {[ 36 126 177],[ 77 174 160],[131 204 157],[188 226 154],[233 244 158],[255 253 187], ...
+              [255 225 146],[255 184 110],[251 136  83],[238  87  67],[212  55  72]};
+
+  case 'giss'
+    names = {[152   0  16],[197  21  24],[242  48  35],[242  76  44],[241 109  55],[241 145  67], ...
+              [240 184  80],[239 231  95],[182 236  87],[111 228  80],[ 62 159 116],[  0  88 248], ...
+              [ 47 120 248],[ 77 157 250],[111 194 251],[135 222 252]};
+
+  case 'ppa'
+    names = {[184 119  60],[212 142  79],[234 196 142],[249 233 206],[254 254 254],[156 226 218], ...
+              [ 59 186 175],[  0 148 140],[  0 134 125]};
+
+  otherwise
+    error('%s',['Requested colormap ''' char(cmapname) ''' does not exist.'])
   end
 end

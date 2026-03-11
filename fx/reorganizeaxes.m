@@ -31,6 +31,23 @@ function reorganizeaxes(nrows, ncols, width, height, spacing_horiz, spacing_vert
     axes_handles = flipud(findall(fig, 'Type', 'axes')); % Reverse the order
     num_axes = numel(axes_handles);
 
+    if isempty(width) && isempty(height)
+        error('Either width or height must be specified.');
+    end
+
+    if isempty(width) || isempty(height)
+        aspect_ratio = get(axes_handles(1), 'PlotBoxAspectRatio');
+        if numel(aspect_ratio) < 2 || aspect_ratio(2) == 0
+            error('Unable to determine axes aspect ratio from PlotBoxAspectRatio.');
+        end
+
+        if isempty(height)
+            height = width * aspect_ratio(2) / aspect_ratio(1);
+        else
+            width = height * aspect_ratio(1) / aspect_ratio(2);
+        end
+    end
+
     % if num_axes ~= nrows * ncols
     %     error('The number of axes does not match the specified layout (%d rows x %d cols).', nrows, ncols);
     % end

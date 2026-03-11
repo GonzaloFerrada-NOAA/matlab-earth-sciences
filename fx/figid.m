@@ -101,7 +101,7 @@ case {'outerright', 'outright'}
 case 'bottomleft'
   VA  = 'bottom';
   HA  = 'left';
-  X   = 0.0 - offx; 
+  X   = 0.0 + offx; 
   Y   = 0.0 + offy;
 
 case 'bottomright'
