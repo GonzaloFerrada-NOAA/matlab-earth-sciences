@@ -64,51 +64,49 @@ hold on
 native_units = get(gca,'units');
 set(gca,'Units','normalized');
 
-x_lim = get(gca,'XLim');
-y_lim = get(gca,'YLim');
-
-% Offsets:
-ratio = diff(y_lim)/diff(x_lim);
-offy  = .015; % fitted on corner
-offx  = offy * ratio;
-
+offset = 0.015;
 % Get positions:
 switch opt.location
 case {'inleft', 'innerleft'}
   VA = 'top';
   HA = 'left';
-  X  = 0.025 + offx;
-  Y  = 1.0 - offy;
+  X  = 0.0 + offset;
+  Y  = 1.0 - offset;
   
 case {'inright', 'innerright'}
   VA  = 'top';
   HA  = 'right';
-  X   = 1.0 - offx; 
-  Y   = 1.0 - offy; 
+  X   = 1.0 - offset; 
+  Y   = 1.0 - offset; 
   
 case {'outerleft', 'outleft'}
   VA  = 'bottom';
   HA  = 'left';
-  X   = 0.0 + offx; 
-  Y   = 1.0 + offy;
+  X   = 0.0 + offset / 2; 
+  Y   = 1.0 + offset / 2; 
   
 case {'outerright', 'outright'}
   VA  = 'bottom';
   HA  = 'right';
-  X   = 1.0 - offx; 
-  Y   = 1.0 + offy; 
+  X   = 1.0 - offset / 2; 
+  Y   = 1.0 + offset / 2;  
   
 case 'bottomleft'
   VA  = 'bottom';
   HA  = 'left';
+<<<<<<< HEAD
   X   = 0.0 + offx; 
   Y   = 0.0 + offy;
+=======
+  X   = 0.0 - offset; 
+  Y   = 0.0 + offset;
+>>>>>>> 4ef0f3f (Update figid)
 
 case 'bottomright'
   VA  = 'bottom';
   HA  = 'right';
-  X   = 1.0 - offx; 
-  Y   = 0.0 + offy;
+  X   = 1.0 - offset; 
+  Y   = 0.0 + offset;
 
 otherwise
   error(['The location option provided (' opt.location ') is not available.'])
