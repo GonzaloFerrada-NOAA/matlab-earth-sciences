@@ -14,11 +14,16 @@ function out = hue(varargin)
   
   % Required variables to be able to analyze inputs:
   colortable = readtable('htmlcolors.csv');
-  cmaps = {'jet2','jet3','gmao','cams','o3' ,'co','blh','clouds', ...
-           'sat','oc','bc','rh','wind','ext','pm','pastel','temp','nox', ...
-           'rainbow','frp','ncl','city','anom','anom2','anom3','anom4','pro','acc', ...
-           'finn','hum','aod','baod','emis','usgs','bright','daod','melt', ...
-           'grav','ceres','giss','ppa', 'ufsanom','hrrr', 'rainbow4'};
+  cmaps = {... 
+        ... % white friendly
+        'jet2', 'jet3', 'gmao', 'hrrr', 'cams', 'aod', 'ncl', 'o3', 'co', 'sat', 'oc', 'bc', 'hum', 'wind', 'pm', 'pastel', 'nox',  ...
+        ... % full color
+        'emis', 'finn', 'usgs', 'blh', 'temp', 'rainbow', 'ww', 'giss', 'acc', 'frp', 'bright', ...
+        ... % black friendly
+        'ext', 'pro', 'city', 'clouds', ...
+        ... % divergent
+        'ssta', 'sea', 'pan', 'ufs', 'br1', 'br2', 'br3', 'br4', 'cpc', 'rh', 'daod', 'melt', 'grav', 'ceres', 'ppa', 'pp2' ...
+        };
 
   names = varargin;
   if nargin > 1
@@ -250,7 +255,7 @@ function names = getpredefinedcmap(cmapname)
   case 'rainbow'
     names = {'red', [255 119 58], [255 237 70], [0 248 57], [0 202 251], [18 51 249], [179 64 250]};
 
-  case 'rainbow4'
+  case 'ww'
     names = {[58 121 200], [103 188 176], [201 226 161], [252 250 190], [254 212 128], ...
              [253 140 80], [224 82 103], [177 54 121], [116 31 127], [68 18 110]};
 
@@ -269,22 +274,40 @@ function names = getpredefinedcmap(cmapname)
   case 'city'
     names = {[  2  32  44],[ 74  55 143],[167  85  118],[252 133  69],[232 244  97]};
 
-  case 'anom4'
+  case 'br4'
     names = {[91 81 157],[124 191 166],[223 244 163],[252 252 252],[250 224 150],[229 117 79],[146 29 67]};
 
-  case 'anom3'
+  case 'br3'
     names = {[91 81 157],[114 141 166],[186 200 227],[252 252 252],[250 214 150],[229 107 79],[146 29 67]};
 
-  case 'anom'
+  case 'br1'
     names = {[36 126 177],[146 190 216],[254 254 254],[251 136 83],[212 55 72]};
 
-  case 'anom2'
+  case 'br2'
     names = {[38 66 155],[88 197 219],[254 254 254],[255 148 99],[229 35 51]};
+    
+  case 'cpc'
+    names = {[34 24 82], [1 93 161], [119 181 226], [191 203 228], [254 254 254], [231 177 103], [218 87 49], [178 46 5], [112 33 0]};
 
-  case 'ufsanom'
+  case 'ufs'
     names = {[7 30 70], [7 46 108], [9 87 156], [33 113 181], [66 146 199], [90 160 205], [120 191 214], [170 220 230], [219 245 255], ...
             [255 255 255], [255 224 224], [252 187 169], [252 146 114], [251 106 74], [240 59 43], [204 23 30], [166 15 20], [120 10 16], [95 0 0]};
 
+  case 'ssta'
+    names = {[122 0 112], [85 60 179], [1 24 199], [0 109 255], [1 235 255], [254 254 254], ...
+             [242 245 0], [240 185 2], [249 110 0], [244 35 1], [150 23 0] };
+             
+  case 'sea'
+    names = {[0 3 127], [0 6 165], [0 9 204], [25 25 255], [75 76 255], [127 127 255], [178 179 255], [204 203 255], [254 254 254], ...
+             [255 254 24], [255 203 25], [255 178 25], [254 127 24], [255 76 26], [255 25 26], [204 0 0], [152 0 1]};
+             
+  case 'pan'
+    names = {[4 14 216], [32 80 255], [65 150 255], [109 193 255], [134 217 255], [156 238 255], [175 245 255], [206 255 255], [254 254 254], ...
+             [255 254 71], [255 235 0], [255 196 0], [255 144 0], [255 72 0], [255 0 0], [213 0 0], [158 0 0]};
+             
+  case 'pp2'
+    names = {[80 47 47], [147 70 57], [187 109 51], [237 209 145], [254 254 254], [179 217 171], [72 180 48], [3 120 20], [40 83 0]};
+              
   case 'pro'
     names = {'black','midnightblue','CadetBlue','LemonChiffon','orange','red','darkred'};
 
@@ -300,10 +323,8 @@ function names = getpredefinedcmap(cmapname)
     names = {'blanchedalmond','wheat',[241 229 11],[145 204 113],'royalblue','plum'};
 
   case 'aod'
-    names = {[243 249 251],[153 210 239],[241 229 11],[239 194 16],[238 158 20],[236 122 25],[234 86 30],[232 50 35]};
-
-  case 'baod'
-    names = {[1 1 1],'skyblue','gold',[232 50 35],'darkred'};
+    % names = {[243 249 251],[153 210 239],[241 229 11],[239 194 16],[238 158 20],[236 122 25],[234 86 30],[232 50 35]};
+    names = {[195 231 245], 'skyblue', 'gold',[232 50 35],'darkred'};
 
   case 'emis'
     names = {[25 62 139],'skyblue',[145 204 113],'gold',[232 50 35]};

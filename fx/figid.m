@@ -94,13 +94,8 @@ case {'outerright', 'outright'}
 case 'bottomleft'
   VA  = 'bottom';
   HA  = 'left';
-<<<<<<< HEAD
-  X   = 0.0 + offx; 
-  Y   = 0.0 + offy;
-=======
   X   = 0.0 - offset; 
   Y   = 0.0 + offset;
->>>>>>> 4ef0f3f (Update figid)
 
 case 'bottomright'
   VA  = 'bottom';
