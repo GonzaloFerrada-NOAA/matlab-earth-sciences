@@ -31,7 +31,7 @@ lon_ticks   = -180:interval_lon:180;
 lat_ticks   = -80:interval_lat:80;
 
 % Grid line specifications:
-grid_alpha = 0.1;
+grid_alpha = .2;
 grid_style = '-';
 
 % Get lambert projection:
@@ -86,31 +86,30 @@ for i = 1:numel(lat_ticks)
     idx_out = ticklon < y_lim(1) | ticklon > y_lim(2) | ticklat < x_lim(1) | ticklat > x_lim(2);
     ticklat(idx_out) = NaN;
     ticklon(idx_out) = NaN;
-    
-    idx     = ~isnan(ticklon);
-    ticklon = ticklon(idx);
-    ticklat = ticklat(idx);
 
-    if sum(idx) >= 1
-        
-        % Plot grid line:
+    idx = ~isnan(ticklon);   % keep as logical mask, don't compact the arrays
+
+    if any(idx)
+
+        % Plot grid line -- NaNs stay in place so plot() breaks the segments:
         ll = plot(ticklat,ticklon,grid_style,'LineWidth',.5);
         ll.Color = [.15,.15,.15,grid_alpha];
-        
-        % Determine if current grid line crosses X-Axis:
-        dist_axis  = ticklat(1) - x_lim(1);
-        crosses_ax = abs(dist_axis) < diff(x_lim)*0.01;
-        
+
+        % Use first VALID point (not ticklat(1), which may now be NaN) for tick placement:
+        first_valid = find(idx,1,'first');
+        dist_axis   = ticklat(first_valid) - x_lim(1);
+        crosses_ax  = abs(dist_axis) < diff(x_lim)*0.01;
+
         if crosses_ax
-            ticks_y(i)  = ticklon(1);
+            ticks_y(i) = ticklon(first_valid);
             if aux_lat < 0
                 degr = [num2str(abs(aux_lat)) char(176) 'S'];
             elseif aux_lat == 0
                 degr = [num2str(abs(aux_lat)) char(176)];
-            elseif aux_lat > 0
+            else
                 degr = [num2str(abs(aux_lat)) char(176) 'N'];
             end
-            tlabs_y{i}  = degr;
+            tlabs_y{i} = degr;
         end
     end
 end

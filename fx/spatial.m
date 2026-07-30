@@ -279,7 +279,8 @@ function [dataout, cbarticks, clabels] = data2levels(datain, levels)
   % Prepare data:
   dataout   = nan(size(datain));
   cbarticks = 1:numel(levels);
-  clabels   = num2str(levels');
+%   clabels   = num2str(levels');
+  clabels = arrayfun(@num2str, levels, 'UniformOutput', false);
   
   % Data values < levels(1):
   dataout( datain < levels(1) )   = 1;
