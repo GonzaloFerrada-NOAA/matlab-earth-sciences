@@ -31,7 +31,7 @@ lon_ticks   = -180:interval_lon:180;
 lat_ticks   = -80:interval_lat:80;
 
 % Grid line specifications:
-grid_alpha = .2;
+grid_alpha = .15;
 grid_style = '-';
 
 % Get lambert projection:
