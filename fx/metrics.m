@@ -1,13 +1,25 @@
-function out = metrics(observation, modeled, garea)
+function out = metrics(observation, modeled, garea, metricsToShow, numFormat)
   % metrics calculates a bunch of commonly used metrics used to evaluate
   % the performance of a model against observation data.
   % Usage:
   % data = metrics(observation_data, modeled_data);
   % data = metrics(observation_data, modeled_data, garea);
+  % data = metrics(observation_data, modeled_data, garea, metricsToShow);
+  % data = metrics(observation_data, modeled_data, garea, metricsToShow, numFormat);
   %
   % Optional input:
-  % garea     : Weights for each point (same size as inputs). Metrics are
-  %             calculated as weighted averages using garea.
+  % garea         : Weights for each point (same size as inputs). Metrics are
+  %                 calculated as weighted averages using garea. Pass [] to
+  %                 skip weighting while still specifying later arguments.
+  % metricsToShow : Cell array of metric names to include in Text/TextH, and
+  %                 in what order. Any of 'N', 'R', 'R2', 'MB', 'NMB', 'MSE',
+  %                 'RMSE', 'cRMSE'. Default: {'N','R','MB','NMB','RMSE','cRMSE'}.
+  % numFormat     : sprintf-style format spec (e.g. '%.4f') applied to all
+  %                 float metrics in Text/TextH. NMB is formatted with one
+  %                 fewer decimal place than numFormat to leave room for the
+  %                 '%'. Not applied to N. Default ([] or ''): legacy
+  %                 3-decimal formatting with a scientific-notation fallback
+  %                 for tiny values.
   %
   % output 'data' is a struct that contains the fields:
   % N         : Number of points that are not NaN
@@ -17,12 +29,13 @@ function out = metrics(observation, modeled, garea)
   % NMB       : Normalized mean bias
   % MSE       : Mean squared error
   % RMSE      : Root mean squared error
+  % cRMSE     : Bias-removed (centered) root mean squared error
   % Slope     : Slope of linear fitting
   % Intercept : Intercept of linear fitting
   % LinearX   : Sample X data of linear fitting
   % LinearY   : Sample Y data of linear fitting
-  % Text      : Text with N, R, MB, NMB and RMSE (vertical)
-  % TextH     : Text with N, R, MB, NMB and RMSE (horizontal)
+  % Text      : Text with the selected metrics (vertical)
+  % TextH     : Text with the selected metrics (horizontal)
   %
   % Author: Gonzalo A. Ferrada (gonzalo.ferrada@noaa.gov)
   % September 2024
@@ -30,11 +43,27 @@ function out = metrics(observation, modeled, garea)
   % First developed as comp_metrics in 2020 and completely redesigned
   % in September 2024, by including new metrics and linear fitting.
   %
-  
+
+  if nargin < 3
+      garea = [];
+  end
+  if nargin < 4 || isempty(metricsToShow)
+      metricsToShow = {'N', 'R', 'MB', 'NMB', 'RMSE', 'cRMSE'};
+  end
+  if nargin < 5
+      numFormat = '';
+  end
+
+  allMetrics = {'N', 'R', 'R2', 'MB', 'NMB', 'MSE', 'RMSE', 'cRMSE'};
+  unknown = metricsToShow(~ismember(metricsToShow, allMetrics));
+  if ~isempty(unknown)
+      error('Unknown metric(s) in metricsToShow: %s', strjoin(unknown, ', '))
+  end
+
   % Read input data:
   obs     = observation(:);
   model   = modeled(:);
-  useWeights = (nargin >= 3) && ~isempty(garea);
+  useWeights = ~isempty(garea);
 
   % Check for errors:
   if numel(obs) ~= numel(model)
@@ -90,6 +119,7 @@ function out = metrics(observation, modeled, garea)
   out.NMB   = (sum(weights .* (model - obs)) / sum(weights .* obs)) * 100;
   out.MSE   = sum(weights .* (model - obs) .^ 2);
   out.RMSE  = sqrt(out.MSE);
+  out.cRMSE = sqrt(out.MSE - out.MB ^ 2); % bias-removed (centered) RMSE
   out.Weights = weights;
 
   % Calculate linear regression coefficients:
@@ -105,42 +135,70 @@ function out = metrics(observation, modeled, garea)
   out.LinearY = out.Slope .* out.LinearX + out.Intercept;
 
   % Text labels (metric-specific formatting):
-  str.N    = sprintf('%d', out.N);
-  str.R    = fmt_num(out.R,    3, false);
-  str.MB   = fmt_num(out.MB,   3, false);
-  str.NMB  = fmt_num(out.NMB,  3, true);   % includes %
-  str.RMSE = fmt_num(out.RMSE, 3, false);
-  str.RMSE = str.RMSE(2:end); % Removing + since RMSE > 0
+  values.N     = out.N;
+  values.R     = out.R;
+  values.R2    = out.R2;
+  values.MB    = out.MB;
+  values.NMB   = out.NMB;
+  values.MSE   = out.MSE;
+  values.RMSE  = out.RMSE;
+  values.cRMSE = out.cRMSE;
+
+  percentMetrics     = {'NMB'};
+  nonnegativeMetrics = {'R2', 'MSE', 'RMSE', 'cRMSE'};
+  signedMetrics      = {'R', 'MB', 'NMB'};
+
+  nShow = numel(metricsToShow);
+  strs  = cell(nShow, 1);
+  for i = 1:nShow
+      name = metricsToShow{i};
+      if strcmp(name, 'N')
+          strs{i} = sprintf('%d', out.N);
+          continue
+      end
+      s = fmt_num(values.(name), 3, ismember(name, percentMetrics), numFormat);
+      if ismember(name, nonnegativeMetrics) && ~isempty(s) && s(1) == '+'
+          s = s(2:end); % Removing leading '+' since this metric is always >= 0
+      elseif ismember(name, signedMetrics) && ~isempty(s) && s(1) >= '0' && s(1) <= '9'
+          s = ['+' s]; % numFormat without a '+' flag: still show sign for +/- metrics
+      end
+      strs{i} = s;
+  end
 
   % Vertical text: use padding for alignment.
-  W = max([numel(str.N), numel(str.R), numel(str.MB), numel(str.NMB), numel(str.RMSE)]);
-  line1    = ['   N = ' pad(str.N,    W, 'left')];
-  line2    = ['   R = ' pad(str.R,    W, 'left')];
-  line3    = ['  MB = ' pad(str.MB,   W, 'left')];
-  line4    = [' NMB = ' pad(str.NMB,  W, 'left')];
-  line5    = ['RMSE = ' pad(str.RMSE, W, 'left')];
-  out.Text = {line1; line2; line3; line4; line5};
+  labelWidth = max(cellfun(@numel, metricsToShow));
+  valueWidth = max(cellfun(@numel, strs));
+  out.Text = cell(nShow, 1);
+  for i = 1:nShow
+      out.Text{i} = [pad(metricsToShow{i}, labelWidth, 'left') ' = ' pad(strs{i}, valueWidth, 'left')];
+  end
 
   % Horizontal text: no padding (compact).
-  out.TextH = ['N=' str.N ...
-               ' R=' str.R ...
-               ' MB=' str.MB ...
-               ' NMB=' str.NMB ...
-               ' RMSE=' str.RMSE];
+  parts = cell(nShow, 1);
+  for i = 1:nShow
+      parts{i} = [metricsToShow{i} '=' strs{i}];
+  end
+  out.TextH = strjoin(parts, ' ');
 
 end
 
-function s = fmt_num(x, ndp, isPercent)
+function s = fmt_num(x, ndp, isPercent, numFormat)
 %FMT_NUM Format numeric metrics with metric-specific precision.
-% - Uses fixed-point with ndp decimals by default.
-% - Switches to scientific notation when fixed-point would round to 0.
-% - Optionally appends '%' for percent metrics.
+% - If numFormat is given (non-empty), uses that sprintf format spec
+%   (e.g. '%.4f'); percent values use one fewer decimal than numFormat
+%   to leave room for the '%'.
+% - Otherwise, uses fixed-point with ndp decimals by default, switching
+%   to scientific notation when fixed-point would round to 0, and percent
+%   values replace their last digit with '%' to make room for it.
 
   if nargin < 2 || isempty(ndp)
     ndp = 3;
   end
-  if nargin < 3
+  if nargin < 3 || isempty(isPercent)
     isPercent = false;
+  end
+  if nargin < 4
+    numFormat = '';
   end
 
   if isempty(x) || isnan(x)
@@ -151,6 +209,17 @@ function s = fmt_num(x, ndp, isPercent)
     else
       s = '-Inf';
     end
+  elseif ~isempty(numFormat)
+    if isPercent
+      fmt = adjust_precision(numFormat, -1);
+    else
+      fmt = numFormat;
+    end
+    s = sprintf(fmt, x);
+    if isPercent
+      s = [s '%'];
+    end
+    return
   else
     ax = abs(x);
 
@@ -160,13 +229,24 @@ function s = fmt_num(x, ndp, isPercent)
       s = sprintf(['%+.' num2str(2) 'e'], x);
     else
       s = sprintf(['%+.' num2str(ndp) 'f'], x);
-      % Trim trailing zeros and orphan decimal point.
-      s = regexprep(s, '0+$', '');
-      s = regexprep(s, '\.$', '');
     end
   end
 
   if isPercent
     s = [s(1:end-1) '%'];
   end
+end
+
+function fmt = adjust_precision(numFormat, delta)
+%ADJUST_PRECISION Shift the precision (digits after '.') of a sprintf
+% format spec like '%.4f' by delta, clamped at 0. Specs without an
+% explicit precision are returned unchanged.
+
+  tok = regexp(numFormat, '\.(\d+)', 'tokens', 'once');
+  if isempty(tok)
+    fmt = numFormat;
+    return
+  end
+  newPrec = max(str2double(tok{1}) + delta, 0);
+  fmt = regexprep(numFormat, '\.(\d+)', ['.' num2str(newPrec)], 'once');
 end
