@@ -1,12 +1,17 @@
-function reorganizeaxes(nrows, ncols, width, height, spacing_horiz, spacing_vert, remove_tick_labels)
+function reorganizeaxes(varargin)
     % REORGANIZEAXES Adjusts axes in the current figure to specified sizes and spacing,
     % and adds margins for axis labels and titles.
     %
     % Usage:
     % reorganizeaxes(nrows, ncols, width, height, spacing_horiz, spacing_vert)
     % reorganizeaxes(nrows, ncols, width, height, spacing_horiz, spacing_vert, remove_tick_labels)
+    % reorganizeaxes(ax, nrows, ncols, width, height, spacing_horiz, spacing_vert, ...)
     %
     % Arguments:
+    % - ax: Optional. Array of axes handles in the order they should be placed
+    %       (left to right, then top to bottom). If omitted, all axes in the
+    %       current figure are used in creation order. If ax is a 2D array,
+    %       ax(row, col) is placed at that row and column.
     % - nrows: Number of rows in the layout.
     % - ncols: Number of columns in the layout.
     % - width: Width of each axes in pixels.
@@ -19,16 +24,40 @@ function reorganizeaxes(nrows, ncols, width, height, spacing_horiz, spacing_vert
     % January 2025
     % REORGANIZEAXES is a completely made-over from the older REDISTRIBUTE_SUBPLOT function.
 
-    if nargin < 7
+    % Check if the first argument is an axes array (graphics handles are not numeric,
+    % so an integer nrows is never mistaken for a figure handle here)
+    if nargin > 0 && ~isnumeric(varargin{1}) && all(isgraphics(varargin{1}, 'axes'), 'all')
+        ax = varargin{1};
+        varargin(1) = [];
+    else
+        ax = [];
+    end
+
+    if numel(varargin) < 6
+        error('Not enough input arguments.');
+    end
+    [nrows, ncols, width, height, spacing_horiz, spacing_vert] = varargin{1:6};
+    if numel(varargin) >= 7
+        remove_tick_labels = varargin{7};
+    else
         remove_tick_labels = false;
     end
 
     % Define margin size in pixels
     margin = 120; % Margin on all sides of the figure
 
-    % Get current figure and axes
-    fig = gcf;
-    axes_handles = flipud(findall(fig, 'Type', 'axes')); % Reverse the order
+    % Get figure and axes
+    if isempty(ax)
+        fig = gcf;
+        axes_handles = flipud(findall(fig, 'Type', 'axes')); % Reverse the order
+    else
+        fig = ancestor(ax(1), 'figure');
+        if isvector(ax)
+            axes_handles = ax(:);
+        else
+            axes_handles = reshape(ax.', [], 1); % Row-major: ax(row, col)
+        end
+    end
     num_axes = numel(axes_handles);
 
     if isempty(width) && isempty(height)
